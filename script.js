@@ -1,4 +1,5 @@
-let myLib = books;
+const addBook = document.getElementById('addbook');
+let myLib = [];
 
 const books = [
     book1 = {
