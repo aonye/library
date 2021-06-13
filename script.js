@@ -1,12 +1,31 @@
 const addBook = document.getElementById('addbook');
+const controller = new AbortController();
 
 addBook.addEventListener('click', () => {
     createForm();
-});
+}, { signal: controller.signal} );
+
+function toggleForm(div) {
+    if (div.style.display === "none") {
+      div.style.display = "flex";
+      return false;
+    } else {
+      div.style.display = "none";
+      return true;
+    }
+  }
+
+
 
 
 function createForm(){
-    const form = document.querySelector('form');
+    const container = document.querySelector('.container');
+
+    if (document.querySelector('form')){ //if the form element exists, we only toggle it
+        toggleForm(container);
+        return;
+    }
+    const form = document.createElement('form');
 
     let title = createTextInput('title');
 
@@ -16,32 +35,39 @@ function createForm(){
 
     let readToggle = createToggleSwitch();
 
-    form.append(title[0]);
-    form.append(document.createElement("br"));
-    form.append(title[1]);
-    form.append(document.createElement("br"));
-    form.append(document.createElement("br"));
+    let submitBtn = document.createElement('button');
+    submitBtn.setAttribute('type', 'button');
+    submitBtn.setAttribute('id', 'submitbtn');
+    submitBtn.textContent = 'Add Book';
+
+    container.appendChild(form);
+
+    //form.append(document.createElement("br"));
+
+    form.appendChild(title[0]);
+    form.appendChild(title[1]);
     
     form.appendChild(author[0]);
-    form.append(document.createElement("br"));
     form.appendChild(author[1]);
-    form.append(document.createElement("br"));
-    form.append(document.createElement("br"));
 
     form.appendChild(pages[0]);
-    form.append(document.createElement("br"));
     form.appendChild(pages[1]);
-    form.append(document.createElement("br"));
-    form.append(document.createElement("br"));
 
     form.appendChild(readToggle);
+    form.appendChild(submitBtn);
 
+    //read/notread toggle
     const toggle = document.querySelector('.toggle input');
 
     toggle.addEventListener('click', () => {
         const onOff = toggle.parentNode.querySelector('.onoff');
         onOff.textContent = toggle.checked ? 'Read' : 'Not read';
     });
+
+    const submit = document.querySelector('#submitbtn');
+    console.log(submit);
+
+    submit.addEventListener('click', () => {toggleForm(container)});
 }
 
 function createToggleSwitch(){
@@ -93,14 +119,14 @@ function createTextInput(str){
     return [label, input];
 }
 
-function createLineBreaks(num){
-    let arr = [];
-    for (let i=0; i<num; i++){
-        let linebreak = document.createElement('label');
-        arr.push(linebreak);
-    }
-    return arr;
-}
+// function createLineBreaks(num){
+//     let arr = [];
+//     for (let i=0; i<num; i++){
+//         let linebreak = document.createElement('label');
+//         arr.push(linebreak);
+//     }
+//     return arr;
+// }
 
 function changeSwitchTextContent(div){
     console.log(div.textContent);
@@ -114,7 +140,7 @@ function changeSwitchTextContent(div){
     }
 }
 
-console.log(createLineBreaks(4));
+//console.log(createLineBreaks(4));
 
 let myLib = [];
 

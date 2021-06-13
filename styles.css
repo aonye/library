@@ -13,10 +13,27 @@ body {
     background-color: lavenderblush;
 }
 
+.container{
+    display: flex;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border: 4px solid #333;
+    border-radius: 10px;
+    width: 175px;
+    height: 250px;
+    justify-content: space-evenly;
+    padding: 5px 5px 5px 5px;
+}
+
 /* The switch - the box around the slider */
 .toggle {
     position: relative;
     display: inline-block;
+    width: 50%;
   }
   
   /* Hide default HTML checkbox */
