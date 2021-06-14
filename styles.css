@@ -10,11 +10,32 @@ h1 {
 }
 
 body {
-    background-color: lavenderblush;
+    background-color: beige;
 }
+
+table {
+    display: flexbox;
+    align-items: stretch;
+    height: fit-content;
+    min-width: 600px;
+    max-width: 75vh;
+    margin: auto;
+  }
+  
+  td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #dddddd;
+  }
 
 .container{
     display: flex;
+    position: absolute;
+    top: 25vh;
 }
 
 form {
