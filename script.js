@@ -22,16 +22,6 @@ addBook.addEventListener('click', () => {
     createForm();
 });
 
-
-// delButton.addEventListener('click', (event) => {
-//     console.log(event.target);
-// });
-
-// for (var key in gotBook1){
-//     if(gotBook1.hasOwnProperty(key))
-//     console.log(key, gotBook1[key]);
-// }
-
 //localStorage.clear();
 console.log(localStorage);
 
@@ -46,8 +36,6 @@ document.querySelectorAll('#delbtn').forEach((node) => {
     delFromTable(tableRow);
   });
 });
-
-
 
 
 function initializeTable(){
