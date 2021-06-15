@@ -13,8 +13,8 @@ Book.prototype.info = function(){
 };
 //add a new book or reload the page -> update myLib;
 
-let gotBook1 = new Book('A Game of Thrones', 'George R.R. Martin', '694', 'Not Read');
-let gotBook2 = new Book('A Clash of Kings', 'George R.R. Martin', '768', 'Not Read');
+let gotBook1 = new Book('A Game of Thrones', 'George R.R. Martin', '694', 'Not read');
+let gotBook2 = new Book('A Clash of Kings', 'George R.R. Martin', '768', 'Not read');
 
 let myLib = [gotBook1, gotBook2];
 
@@ -22,29 +22,21 @@ addBook.addEventListener('click', () => {
     createForm();
 });
 
-//localStorage.clear();
+localStorage.clear();
 console.log(localStorage);
 
 initializeTable();
 
-document.querySelectorAll('#delbtn').forEach((node) => {
-    node.addEventListener('click', (event) => {
-    let del = event.target;
-    let tableRow = getNthParent(del, 2);
-    let title = tableRow.firstChild.textContent;
-    delFromLibArr(title);
-    delFromTable(tableRow);
-  });
-});
-
-
-function initializeTable(){
+function retrieveLibArr(){
     let library = JSON.parse(localStorage.getItem('libArray'));
     if (!library) {
     library = myLib;
     }
-    // console.log(library);
-    // console.log(library.length);
+    return library;
+}
+
+function initializeTable(){
+    let library = retrieveLibArr();
     appendTable(library);
 }
 
@@ -59,14 +51,38 @@ function makeDelButton(){
     return td;
 }
 
-function delFromLibArr(title){
+function makeReadButton(val, index){
+    let button = document.createElement('button');
+    button.setAttribute('type', 'button');
+    button.setAttribute('id', 'readbtn');
+    button.textContent = val;
+
+    button.addEventListener('click', () => {
+        button.textContent = button.textContent === 'Read' ? 'Not read' : 'Read'
+        changeLibVal(button.textContent, index);
+    });
+    return button;
+}
+
+function retrieveLibArr(){
     let library = JSON.parse(localStorage.getItem('libArray'));
     if (!library) {
     library = myLib;
     }
-    let index = library.findIndex((book) => book["title"] === title);
+    return library;
+}
+
+function delFromLibArr(string){
+    let library = retrieveLibArr();
+    let index = library.findIndex((book) => book["title"] === string);
     library.splice(index,1);
-    //console.log(library);
+    localStorage.setItem('libArray', JSON.stringify(library));
+}
+
+function changeLibVal(string, index){
+    let library = retrieveLibArr();
+    library[index]["read"] = string;
+    //console.log(library[index]);
     localStorage.setItem('libArray', JSON.stringify(library));
 }
 
@@ -82,7 +98,14 @@ function appendTable(libArr) {
             for (let key in library[i]){
                 if (library[i].hasOwnProperty(key)){
                 let data = document.createElement('td');
-                data.textContent = library[i][key];
+                let btn;
+                if (key==='read'){
+                    btn = makeReadButton(library[i][key], i);
+                    data.append(btn);
+                }
+                else {
+                    data.textContent = library[i][key];
+                }
                 row.append(data);
                 }
             }
@@ -90,6 +113,19 @@ function appendTable(libArr) {
         row.append(btn);
         table.append(row);
     }
+    addDeleteEvent();
+}
+
+function addDeleteEvent(){
+    document.querySelectorAll('#delbtn').forEach((node) => {
+        node.addEventListener('click', (event) => {
+        let del = event.target;
+        let tableRow = getNthParent(del, 2);
+        let title = tableRow.firstChild.textContent;
+        delFromLibArr(title);
+        delFromTable(tableRow);
+        });
+    });
 }
 
 function appendLibArr(obj){
@@ -98,7 +134,6 @@ function appendLibArr(obj){
     library = myLib;
     }
     library.push(obj);
-    console.log(library);
     localStorage.setItem('libArray', JSON.stringify(library));
 }
 
@@ -117,7 +152,7 @@ function createForm(){
     let pages = createTextInput('pages');
     let readToggle = createToggleSwitch();
     let submitBtn = document.createElement('button');
-    submitBtn.setAttribute('type', 'submit');
+    submitBtn.setAttribute('type', 'button');
     submitBtn.setAttribute('id', 'submitbtn');
     submitBtn.textContent = 'Add Book';
 
@@ -140,7 +175,7 @@ function createForm(){
     let onOff = toggle.parentNode.querySelector('.onoff');
 
     toggle.addEventListener('click', () => {
-        onOff.textContent = toggle.checked ? 'Read' : 'Not Read';
+        onOff.textContent = toggle.checked ? 'Read' : 'Not read';
     });
 
     //submit button hides the form
@@ -187,7 +222,7 @@ function toggleForm(div){
 
 function clearInput(checkbox, toggleText){
     document.querySelector('form').reset();
-    toggleText.textContent = checkbox.checked ? 'Read' : 'Not Read';
+    toggleText.textContent = checkbox.checked ? 'Read' : 'Not read';
     //the text is based on a ternary operator in the toggle click event
     //so we need to manually reset it
     return;
@@ -240,17 +275,17 @@ function createTextInput(str){
     return [label, input];
 }
 
-function changeSwitchTextContent(div){
-    console.log(div.textContent);
-    if (div.textContent==='Not read'){
-        div.textContent='Read';
-        return;
-    }
-    else {
-        div.textContent='Not read';
-        return;
-    }
-}
+// function changeSwitchTextContent(div){
+//     console.log(div.textContent);
+//     if (div.textContent==='Not read'){
+//         div.textContent='Read';
+//         return;
+//     }
+//     else {
+//         div.textContent='Not read';
+//         return;
+//     }
+// }
 
 function getNthParent(elem, n) {
     return n === 0 ? elem : getNthParent(elem.parentNode, n - 1);
@@ -259,8 +294,3 @@ function getNthParent(elem, n) {
 //All of your book objects are going to be stored in a simple array
 //so add a function to the script (not the constructor) 
 //that can take user’s input and store the new book objects into an array. 
-
-
-
-
-
