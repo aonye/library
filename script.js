@@ -3,206 +3,217 @@ const addBook = document.getElementById('addbook');
 const table = document.querySelector('tbody');
 const toggle = document.querySelector('.toggle input');
 
-function Book(title, author, pages, read){
-    this.title = title;
-    this.author = author;
-    this.pages = pages;
-    this.read = read;
-};
+// function Book(title, author, pages, read){
+//     this.title = title;
+//     this.author = author;
+//     this.pages = pages;
+//     this.read = read;
+// };
+
+class Book {
+    constructor(title, author, pages, read) {
+        this.title = title;
+        this.author = author;
+        this.pages = pages;
+        this.read = read;
+    }
+}
 
 Book.prototype.info = function(){
     return `${this.title} by ${this.author}, ${this.pages} pages, ${this.read}`;
-};
-//add a new book or reload the page -> update myLib;
-
-let gotBook1 = new Book('A Game of Thrones', 'George R.R. Martin', '694', 'Not read');
-let gotBook2 = new Book('A Clash of Kings', 'George R.R. Martin', '768', 'Not read');
-
-let myLib = [gotBook1, gotBook2];
-
+}; //add a new book or reload the page -> update myLib;
 //localStorage.clear();
 console.log(localStorage);
 
-initializeTable();
+const libraryArray = (() => {
 
-addBook.addEventListener('click', () => {
-    displayForm();
-});
+    const setPersonalLib = true;
+    let gotBook1 = new Book('A Game of Thrones', 'George R.R. Martin', '694', 'Not read');
+    let gotBook2 = new Book('A Clash of Kings', 'George R.R. Martin', '768', 'Not read');
+    let myLib = [gotBook1, gotBook2];
 
-function retrieveLibArr(){
-    let library = JSON.parse(localStorage.getItem('libArray'));
-    if (!library) {
-    library = myLib;
+    function retrieveLibArr(){
+        let library;
+        if (!(localStorage.getItem('personalLib'))){
+            localStorage.setItem('personalLib', setPersonalLib);
+            library = myLib;
+            localStorage.setItem('libArray', JSON.stringify(library));
+        }
+        else {
+            library = JSON.parse(localStorage.getItem('libArray'));
+        }
+        return library;
     }
-    return library;
-}
 
-function initializeTable(){
-    let library = retrieveLibArr();
-    appendTable(library);
-}
-
-function makeDelButton(){
-    let td = document.createElement('td');
-    let button = document.createElement('button');
-    button.setAttribute('type', 'button');
-    button.setAttribute('id', 'delbtn');
-    button.textContent = 'Delete';
-
-    td.append(button); //wrap button in <tabledata> to embed
-    return td;
-}
-
-function makeReadButton(val, index){
-    let button = document.createElement('button');
-    button.setAttribute('type', 'button');
-    button.setAttribute('id', 'readbtn');
-    button.textContent = val;
-
-    button.addEventListener('click', () => {
-        readBtnEventHand(button, index);
-    });
-    return button;
-}
-
-function readBtnEventHand(button, index){
-    button.textContent = button.textContent === 'Read' ? 'Not read' : 'Read'
-    changeLibVal(button.textContent, index);
-}
-
-function retrieveLibArr(){
-    let library = JSON.parse(localStorage.getItem('libArray'));
-    if (!library) {
-    library = myLib;
+    function appendLibArr(obj){
+        let library = retrieveLibArr();
+        library.push(obj);
+        localStorage.setItem('libArray', JSON.stringify(library));
     }
-    return library;
-}
 
-function delFromLibArr(string){
-    let library = retrieveLibArr();
-    let index = library.findIndex((book) => book["title"] === string);
-    library.splice(index,1);
-    localStorage.setItem('libArray', JSON.stringify(library));
-}
-
-function changeLibVal(string, index){
-    let library = retrieveLibArr();
-    library[index]["read"] = string;
-    //console.log(library[index]);
-    localStorage.setItem('libArray', JSON.stringify(library));
-}
-
-function delFromTable(node){
-    node.remove();
-}
-
-function appendTable(libArr) {
-    let library = libArr;
-    for (let i = 0; i < library.length; i++){
-        let row = document.createElement('tr');
-        //row.setAttribute('class', 'tablerow');
-            for (let key in library[i]){
-                if (library[i].hasOwnProperty(key)){
-                let data = document.createElement('td');
-                let btn;
-                if (key==='read'){
-                    btn = makeReadButton(library[i][key], i);
-                    data.append(btn);
-                }
-                else {
-                    data.textContent = library[i][key];
-                }
-                row.append(data);
-                }
-            }
-        let btn = makeDelButton();
-        row.append(btn);
-        table.append(row);
+    function delFromLibArr(string){
+        let library = retrieveLibArr();
+        let index = library.findIndex((book) => book["title"] === string);
+        library.splice(index,1);
+        localStorage.setItem('libArray', JSON.stringify(library));
     }
-    addDeleteEvent();
-}
 
-function addDeleteEvent(){
-    document.querySelectorAll('#delbtn').forEach((node) => {
-        node.addEventListener('click', (event) => {
+    function changeLibVal(string, index){
+        let library = retrieveLibArr();
+        library[index]["read"] = string;
+        localStorage.setItem('libArray', JSON.stringify(library));
+    }
+    return { retrieveLibArr, delFromLibArr, appendLibArr, changeLibVal };
+})();
+
+const tableEdit = (() => {
+
+    function initializeTable(){
+        appendTable(libraryArray.retrieveLibArr());
+    }
+
+    function getNthParent(elem, n) {
+        return n === 0 ? elem : getNthParent(elem.parentNode, n - 1);
+    }
+
+    function makeReadButton(val, index){
+        let button = document.createElement('button');
+        button.setAttribute('type', 'button');
+        button.setAttribute('id', 'readbtn');
+        button.textContent = val;
+    
+        button.addEventListener('click', () => {
+            readBtnEventHand(button, index);
+        });
+        return button;
+    }
+
+    function makeDelButton(){
+        let td = document.createElement('td');
+        let button = document.createElement('button');
+        button.setAttribute('type', 'button');
+        button.setAttribute('id', 'delbtn');
+        button.textContent = 'Delete';
+    
+        td.append(button); //wrap button in <tabledata> to embed
+        return td;
+    }
+
+    function readBtnEventHand(button, index){
+        button.textContent = button.textContent === 'Read' ? 'Not read' : 'Read'
+        libraryArray.changeLibVal(button.textContent, index);
+    }
+
+    function delFromTable(node){
+        node.remove();
+    }
+
+    function appendTable(libArr) {
+        let library = libArr;
+        for (let i = 0; i < library.length; i++){
+            let row = document.createElement('tr');
+                for (let key in library[i]){
+                    if (library[i].hasOwnProperty(key)){
+                    let data = document.createElement('td');
+                    let btn;
+                    if (key==='read'){
+                        btn = makeReadButton(library[i][key], i);
+                        data.append(btn);
+                    }
+                    else {
+                        data.textContent = library[i][key];
+                    }
+                    row.append(data);
+                    }
+                }
+            let btn = makeDelButton();
+            row.append(btn);
+            table.append(row);
+            addDeleteEvent();
+        }
+    }
+
+    function addDeleteEvent(){
+        document.querySelectorAll('#delbtn').forEach((btn) => btn.addEventListener('click', delHandler));
+    }
+
+    const delHandler = (event) => {
         let del = event.target;
         let tableRow = getNthParent(del, 2);
         let title = tableRow.firstChild.textContent;
-        delFromLibArr(title);
+        libraryArray.delFromLibArr(title);
         delFromTable(tableRow);
-        });
-    });
-}
-
-function appendLibArr(obj){
-    let library = JSON.parse(localStorage.getItem('libArray'));
-    if (!library) {
-    library = myLib;
     }
-    library.push(obj);
-    localStorage.setItem('libArray', JSON.stringify(library));
-}
 
-function displayForm(){
-    toggleForm();
+    return { initializeTable, appendTable };
+})();
 
-    //read/ notread toggle
-    toggle.addEventListener('click', () => {
-        readToggleEventHand();
-    });
 
-    //submit hides the form and prevents refresh
-    form.addEventListener('submit', (event) => {
-        submitHandler(event);
-    });
-}
 
-function readToggleEventHand(){
-    let onOff = toggle.parentNode.querySelector('.onoff');
-    onOff.textContent = toggle.checked ? 'Read' : 'Not read';
-}
+const formElem = (() => {
 
-function toggleForm(){
-    let style = window.getComputedStyle(form).display;
-    if (style === "none") {
-        form.style.display = "flex";
-        return style;
-    } 
-    else {
-      form.style.display = "none";
-      return style;
+    function toggleForm(){
+        let style = window.getComputedStyle(form).display;
+        if (style === "none") {
+            form.style.display = "flex";
+            return style;
+        } 
+        else {
+          form.style.display = "none";
+          return style;
+        }
     }
-}
 
-function clearInput(){
-    form.reset();
-    const toggleText = document.querySelector('.onoff');
-    toggleText.textContent = 'Not read';
-    //the text changes based on a ternary operator in the toggle click event
-    //so we need to manually reset it
-}
+    function createFormObj(){
+        const titleField = document.getElementById('title');
+        const authorField = document.getElementById('author');
+        const pagesField = document.getElementById('pages');
+        const toggleText = document.querySelector('.onoff');
+    
+        return tempObj = new Book(titleField.value, authorField.value, pagesField.value, toggleText.textContent);
+    }
 
-function getNthParent(elem, n) {
-    return n === 0 ? elem : getNthParent(elem.parentNode, n - 1);
-}
 
-function submitHandler(event){
-    event.preventDefault();
-    let obj = createFormObj();
-    appendTable([obj]);
-    appendLibArr(obj);
-    clearInput();
-    toggleForm();
-}
+    function clearInput(){
+        form.reset();
+        const toggleText = document.querySelector('.onoff');
+        toggleText.textContent = 'Not read';
+        //the text changes based on a ternary operator in the toggle click event
+        //so we need to manually reset it
+    }
 
-function createFormObj(){
-    const titleField = document.getElementById('title');
-    const authorField = document.getElementById('author');
-    const pagesField = document.getElementById('pages');
-    const toggleText = document.querySelector('.onoff');
+    function formHandler(){
+        toggleForm();
+    }
 
-    return tempObj = new Book(titleField.value, authorField.value, pagesField.value, toggleText.textContent);
-}
+    function readToggleEventHand(){
+        let onOff = toggle.parentNode.querySelector('.onoff');
+        onOff.textContent = toggle.checked ? 'Read' : 'Not read';
+    }
+
+    function submitHandler(event){
+        event.preventDefault();
+        let obj = createFormObj();
+        tableEdit.appendTable([obj]);
+        libraryArray.appendLibArr(obj);
+        clearInput();
+        toggleForm();  
+    }
+
+    addBook.addEventListener('click', formHandler); //leave on, do not disable.
+    toggle.addEventListener('click', readToggleEventHand); //read/ notread toggle
+    form.addEventListener('submit', submitHandler);  //submit hides the form and prevents refresh
+
+    return {};
+
+})();
+
+tableEdit.initializeTable();
+
+
+
+
+
 
 // function createToggleSwitch(){
 //     const label = document.createElement('label');
