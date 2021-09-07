@@ -1,3 +1,34 @@
+import { initializeApp } from 'firebase/app';
+import {
+    getAuth,
+    onAuthStateChanged,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+} from 'firebase/auth';
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    limit,
+    onSnapshot,
+    setDoc,
+    updateDoc,
+    doc,
+    serverTimestamp,
+} from 'firebase/firestore';
+import {
+    getStorage,
+    ref,
+    uploadBytesResumable,
+    getDownloadURL,
+} from 'firebase/storage';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getPerformance } from 'firebase/performance';
+
+
 const form = document.querySelector('form');
 const addBook = document.getElementById('addbook');
 const table = document.querySelector('tbody');
@@ -19,7 +50,7 @@ class Book {
     }
 }
 
-Book.prototype.info = function(){
+Book.prototype.info = function () {
     return `${this.title} by ${this.author}, ${this.pages} pages, ${this.read}`;
 }; //add a new book or reload the page -> update myLib;
 //localStorage.clear();
@@ -32,9 +63,9 @@ const libraryArray = (() => {
     let gotBook2 = new Book('A Clash of Kings', 'George R.R. Martin', '768', 'Not read');
     let myLib = [gotBook1, gotBook2];
 
-    function retrieveLibArr(){
+    function retrieveLibArr() {
         let library;
-        if (!(localStorage.getItem('personalLib'))){
+        if (!(localStorage.getItem('personalLib'))) {
             localStorage.setItem('personalLib', setPersonalLib);
             library = myLib;
             localStorage.setItem('libArray', JSON.stringify(library));
@@ -45,20 +76,20 @@ const libraryArray = (() => {
         return library;
     }
 
-    function appendLibArr(obj){
+    function appendLibArr(obj) {
         let library = retrieveLibArr();
         library.push(obj);
         localStorage.setItem('libArray', JSON.stringify(library));
     }
 
-    function delFromLibArr(string){
+    function delFromLibArr(string) {
         let library = retrieveLibArr();
         let index = library.findIndex((book) => book["title"] === string);
-        library.splice(index,1);
+        library.splice(index, 1);
         localStorage.setItem('libArray', JSON.stringify(library));
     }
 
-    function changeLibVal(string, index){
+    function changeLibVal(string, index) {
         let library = retrieveLibArr();
         library[index]["read"] = string;
         localStorage.setItem('libArray', JSON.stringify(library));
@@ -68,7 +99,7 @@ const libraryArray = (() => {
 
 const tableEdit = (() => {
 
-    function initializeTable(){
+    function initializeTable() {
         appendTable(libraryArray.retrieveLibArr());
     }
 
@@ -76,47 +107,47 @@ const tableEdit = (() => {
         return n === 0 ? elem : getNthParent(elem.parentNode, n - 1);
     }
 
-    function makeReadButton(val, index){
+    function makeReadButton(val, index) {
         let button = document.createElement('button');
         button.setAttribute('type', 'button');
         button.setAttribute('id', 'readbtn');
         button.textContent = val;
-    
+
         button.addEventListener('click', () => {
             readBtnEventHand(button, index);
         });
         return button;
     }
 
-    function makeDelButton(){
+    function makeDelButton() {
         let td = document.createElement('td');
         let button = document.createElement('button');
         button.setAttribute('type', 'button');
         button.setAttribute('id', 'delbtn');
         button.textContent = 'Delete';
-    
+
         td.append(button); //wrap button in <tabledata> to embed
         return td;
     }
 
-    function readBtnEventHand(button, index){
+    function readBtnEventHand(button, index) {
         button.textContent = button.textContent === 'Read' ? 'Not read' : 'Read'
         libraryArray.changeLibVal(button.textContent, index);
     }
 
-    function delFromTable(node){
+    function delFromTable(node) {
         node.remove();
     }
 
     function appendTable(libArr) {
         let library = libArr;
-        for (let i = 0; i < library.length; i++){
+        for (let i = 0; i < library.length; i++) {
             let row = document.createElement('tr');
-                for (let key in library[i]){
-                    if (library[i].hasOwnProperty(key)){
+            for (let key in library[i]) {
+                if (library[i].hasOwnProperty(key)) {
                     let data = document.createElement('td');
                     let btn;
-                    if (key==='read'){
+                    if (key === 'read') {
                         btn = makeReadButton(library[i][key], i);
                         data.append(btn);
                     }
@@ -124,8 +155,8 @@ const tableEdit = (() => {
                         data.textContent = library[i][key];
                     }
                     row.append(data);
-                    }
                 }
+            }
             let btn = makeDelButton();
             row.append(btn);
             table.append(row);
@@ -133,7 +164,7 @@ const tableEdit = (() => {
         }
     }
 
-    function addDeleteEvent(){
+    function addDeleteEvent() {
         document.querySelectorAll('#delbtn').forEach((btn) => btn.addEventListener('click', delHandler));
     }
 
@@ -152,29 +183,29 @@ const tableEdit = (() => {
 
 const formElem = (() => {
 
-    function toggleForm(){
+    function toggleForm() {
         let style = window.getComputedStyle(form).display;
         if (style === "none") {
             form.style.display = "flex";
             return style;
-        } 
+        }
         else {
-          form.style.display = "none";
-          return style;
+            form.style.display = "none";
+            return style;
         }
     }
 
-    function createFormObj(){
+    function createFormObj() {
         const titleField = document.getElementById('title');
         const authorField = document.getElementById('author');
         const pagesField = document.getElementById('pages');
         const toggleText = document.querySelector('.onoff');
-    
+
         return tempObj = new Book(titleField.value, authorField.value, pagesField.value, toggleText.textContent);
     }
 
 
-    function clearInput(){
+    function clearInput() {
         form.reset();
         const toggleText = document.querySelector('.onoff');
         toggleText.textContent = 'Not read';
@@ -182,22 +213,22 @@ const formElem = (() => {
         //so we need to manually reset it
     }
 
-    function formHandler(){
+    function formHandler() {
         toggleForm();
     }
 
-    function readToggleEventHand(){
+    function readToggleEventHand() {
         let onOff = toggle.parentNode.querySelector('.onoff');
         onOff.textContent = toggle.checked ? 'Read' : 'Not read';
     }
 
-    function submitHandler(event){
+    function submitHandler(event) {
         event.preventDefault();
         let obj = createFormObj();
         tableEdit.appendTable([obj]);
         libraryArray.appendLibArr(obj);
         clearInput();
-        toggleForm();  
+        toggleForm();
     }
 
     addBook.addEventListener('click', formHandler); //leave on, do not disable.
@@ -229,7 +260,7 @@ tableEdit.initializeTable();
 //     const spanSlider = document.createElement('span');
 //     spanSlider.classList.add('slider');
 //     spanSlider.classList.add('round');
-    
+
 //     label.appendChild(spanText);
 //     label.append(input);
 //     label.appendChild(spanSlider);
